@@ -22,6 +22,9 @@ from kivymd.uix.screen import MDScreen
 from kivymd.uix.screenmanager import MDScreenManager
 from kivymd.uix.transition import MDSwapTransition, MDFadeSlideTransition, MDSlideTransition
 
+# MDList
+from kivymd.uix.list import OneLineAvatarIconListItem
+from kivymd.uix.button import MDIconButton
 
 def get_date() -> str:
     '''
@@ -31,38 +34,51 @@ def get_date() -> str:
 
 
 KV = '''
+MDScreenManager:
+    id: smanager
 
-BoxLayout:
-    orientation: 'vertical'
+    MDScreen:
+        id: mainS
+        name: "main"
 
-    MDTopAppBar:
-        title: "ADD MEMOS"
-        left_action_items: [['menu', lambda x: app.theme_dark()]]
-        
-        right_action_items: [['magnify', lambda x: app.show_search_dialog()]]
+        BoxLayout:
+            orientation: 'vertical'
+
+            MDTopAppBar:
+                title: "ADD MEMOS"
+                left_action_items: [['menu', lambda x: app.theme_dark()]]
+                
+                right_action_items: [['magnify', lambda x: app.show_search_dialog()]]
 
 
-    FloatLayout:
-        MDTextField:
-            id: text_field
-            hint_text: "Name your memo"
-            pos_hint: {'center_x': .5, 'center_y': .7}
-            size_hint_x: .8
-            text: 'memo'
-            
-        MDIconButton:
-            icon: "folder-file"
-            theme_text_color: "Custom"
-            text_color: get_color_from_hex("#FF0000")
-            user_font_size: "70sp"
-            pos_hint: {'center_x': .3, 'center_y': .6}
-            on_release: app.file_manager_open()
-        MDIconButton:
-            icon: "check"
-            theme_text_color: "Custom"
-            text_color: get_color_from_hex("#FF0000")
-            pos_hint: {'center_x': .7, 'center_y': .6}
-            on_release: app.check()
+            FloatLayout:
+                MDTextField:
+                    id: text_field
+                    hint_text: "Name your memo"
+                    pos_hint: {'center_x': .5, 'center_y': .7}
+                    size_hint_x: .8
+                    text: 'memo'
+                    
+                MDIconButton:
+                    icon: "folder-file"
+                    theme_text_color: "Custom"
+                    text_color: get_color_from_hex("#FF0000")
+                    user_font_size: "70sp"
+                    pos_hint: {'center_x': .3, 'center_y': .6}
+                    on_release: app.file_manager_open()
+                MDIconButton:
+                    icon: "check"
+                    theme_text_color: "Custom"
+                    text_color: get_color_from_hex("#FF0000")
+                    pos_hint: {'center_x': .7, 'center_y': .6}
+                    on_release: app.check()
+
+    MDScreen:
+        id: S2
+        name: "results"
+        ScrollView:
+            MDList:
+                id: container
         
 '''
 
@@ -119,8 +135,8 @@ class Example(MDApp):
 
     ''' file manager-end '''
     
-    def check(self):
-        toast(_:=str(self.root.children[0].children[2].text))
+    def check(self): # .children.__len__()
+        toast(_:=str(self.root.get_screen('main').children[0].children[0].children[2].text))
         print(_)
         # add to db_payload
         db_payload['memo'] = _
@@ -157,13 +173,31 @@ class Example(MDApp):
     def do_search(self, obj):
         search_query = self.dialog.content_cls.text
         print(f'Searching for: {search_query}')
+        # search in db
+        self.add_result()
         self.dialog.dismiss()
+        self.root.current = 'results'
 
     ''' search end '''
 
     def on_stop(self):...
-    def on_start(self):
-        pass
+    def on_start(self):...
+    
+    ''' add result | S2 '''
+    def add_result(self):
+        item = OneLineAvatarIconListItem(text=f'Item first, 8')
+        icon_btn = MDIconButton(icon="android")
+        icon_btn.bind(on_release=self.delete_widget)
+        item.children[0].add_widget(icon_btn)
+        self.root.get_screen('results').children[0].children[0].add_widget(item)
+        # self.root.get_screen("results").ids.container.add_widget(item)
+
+    def delete_widget(self, r):
+            global widget_list
+            root = self.root.ids.container
+            [root.remove_widget(w) for w in widget_list]
+    
+    ''' add result end '''
 
 
 # memry_dict
