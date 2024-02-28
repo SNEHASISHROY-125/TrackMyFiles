@@ -27,6 +27,7 @@ class Example(MDApp):
         def on_start(self):
             item = OneLineAvatarIconListItem(text=f'Item first, 8')
             icon_btn = MDIconButton(icon="android")
+            icon_btn.bind(on_release=self.delete_widget)
             item.children[0].add_widget(icon_btn)
             self.root.ids.container.add_widget(item)
             # time.sleep(2)
@@ -46,12 +47,25 @@ class Example(MDApp):
                 Clock.schedule_once(lambda dt: self.add_widget(root, i), 1 * i)
 
         def add_widget(self, root, i):
+            global widget_list
             item = OneLineAvatarIconListItem(text=f'Item {i}')
             icon_btn = MDIconButton(icon="android")
             item.children[0].add_widget(icon_btn)
             root.add_widget(item)
+            # store the widgets to remove in future
+            widget_list.append(item)
+        
+        def delete_widget(self, r):
+            global widget_list
+            root = self.root.ids.container
+            [root.remove_widget(w) for w in widget_list]
 
     # Example().run()
     # 
+
+# add or delete widgets from main widget tree
+global widget_list
+widget_list = []
+
 
 Example().run()

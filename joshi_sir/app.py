@@ -17,6 +17,12 @@ from kivymd.uix.dialog import MDDialog
 from kivymd.uix.button import MDFlatButton
 # from kivymd.uix.textfield import MDTextField
 
+# Screen:
+from kivymd.uix.screen import MDScreen
+from kivymd.uix.screenmanager import MDScreenManager
+from kivymd.uix.transition import MDSwapTransition, MDFadeSlideTransition, MDSlideTransition
+
+
 def get_date() -> str:
     '''
     Returns the current date in the format: "YYYY-MM-DD".
@@ -31,8 +37,8 @@ BoxLayout:
 
     MDTopAppBar:
         title: "ADD MEMOS"
-        left_action_items: [['menu', lambda x: None]]
-        right_action_items: [['magnify', lambda x: None]]
+        left_action_items: [['menu', lambda x: app.theme_dark()]]
+        
         right_action_items: [['magnify', lambda x: app.show_search_dialog()]]
 
 
@@ -75,7 +81,18 @@ class Example(MDApp):
 
     def build(self):
         return Builder.load_string(KV)
+    
+    ''' theme '''
+    def theme_dark(self):
+        # dark theme
+        self.theme_cls.theme_style = "Dark"
+    def theme_light(self):
+        # light theme
+        self.theme_cls.theme_style = "Light"
 
+    ''' theme-end '''
+
+    ''' file manager '''
     def file_manager_open(self):
         self.file_manager.show(
             os.path.expanduser("~"))  # output manager to the screen
@@ -99,6 +116,8 @@ class Example(MDApp):
 
         self.manager_open = False
         self.file_manager.close()
+
+    ''' file manager-end '''
     
     def check(self):
         toast(_:=str(self.root.children[0].children[2].text))
