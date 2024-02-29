@@ -26,6 +26,14 @@ from kivymd.uix.transition import MDSwapTransition, MDFadeSlideTransition, MDSli
 from kivymd.uix.list import OneLineAvatarIconListItem
 from kivymd.uix.button import MDIconButton
 
+# Results-add
+from kivymd.uix.textfield import MDTextField
+
+from kivy.uix.boxlayout import BoxLayout
+from kivymd.uix.list import OneLineListItem
+from kivymd.uix.button import MDIconButton
+from kivymd.uix.label import MDLabel
+
 def get_date() -> str:
     '''
     Returns the current date in the format: "YYYY-MM-DD".
@@ -76,9 +84,18 @@ MDScreenManager:
     MDScreen:
         id: S2
         name: "results"
-        ScrollView:
-            MDList:
-                id: container
+        BoxLayout:
+            orientation: 'vertical'
+
+            MDTopAppBar:
+                title: "Search Results"
+                left_action_items: [['home', lambda x: app.to_home()]]
+                
+                right_action_items: [['magnify', lambda x: app.show_search_dialog()]]
+
+            ScrollView:
+                MDList:
+                    id: container
         
 '''
 
@@ -171,11 +188,14 @@ class Example(MDApp):
         self.dialog.dismiss()
 
     def do_search(self, obj):
+        # serach-dialog-box content-API
         search_query = self.dialog.content_cls.text
         print(f'Searching for: {search_query}')
-        # search in db
-        self.add_result()
+        # search in db...
+        # add result to results screen:
+        self.add_result(self.dialog.content_cls.text)
         self.dialog.dismiss()
+        # change screen to results
         self.root.current = 'results'
 
     ''' search end '''
@@ -184,23 +204,49 @@ class Example(MDApp):
     def on_start(self):...
     
     ''' add result | S2 '''
-    def add_result(self):
-        item = OneLineAvatarIconListItem(text=f'Item first, 8')
-        icon_btn = MDIconButton(icon="android")
-        icon_btn.bind(on_release=self.delete_widget)
-        item.children[0].add_widget(icon_btn)
-        self.root.get_screen('results').children[0].children[0].add_widget(item)
+    def add_result(self,content='search result'):
+        # 
+        global results_widget_list
+        #
+        # item = OneLineAvatarIconListItem(text=f'result:{content}')
+        # icon_btn = MDIconButton(icon="android")
+        # icon_btn.bind(on_release=self.delete_widget)
+        # item.children[0].add_widget(icon_btn)
+        result_text = '' # content
+        item = OneLineListItem()
+        box = BoxLayout(orientation='horizontal', spacing=10)
+        icon_btn1 = MDIconButton(icon="android", size_hint_x=None, width=50)
+        icon_btn2 = MDIconButton(icon="apple", size_hint_x=None, width=50)
+        label = MDTextField(
+                text=result_text,
+            )
+        box.add_widget(icon_btn1)
+        box.add_widget(label)
+        box.add_widget(icon_btn2)
+        item.add_widget(box)
+        # add the widget to list to remove or do something in future
+        results_widget_list.append(item)
+        #
+        self.root.get_screen('results').children[0].children[0].children[0].add_widget(item)
         # self.root.get_screen("results").ids.container.add_widget(item)
 
     def delete_widget(self, r):
-            global widget_list
+            global results_widget_list
             root = self.root.ids.container
-            [root.remove_widget(w) for w in widget_list]
+            [root.remove_widget(w) for w in results_widget_list]
     
     ''' add result end '''
 
+    ''' home '''
+    def to_home(self):
+        self.root.current = 'main'
+        # remove all widgets from results screen
+        self.delete_widget(None)
+    ''' home end '''
+
 
 # memry_dict
+# db_payload to insert into db
 global db_payload
 db_payload = {
     'date': get_date(),
@@ -208,5 +254,9 @@ db_payload = {
     'memo': 'telegram'
 }
 
+# widget_list of widgets that are added in after search results-screen
+# add or delete widgets from {results} main widget tree
+global results_widget_list
+results_widget_list = []
 
 Example().run()
