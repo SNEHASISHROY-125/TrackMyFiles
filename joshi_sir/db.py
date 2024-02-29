@@ -23,11 +23,11 @@ cursor.execute("""
 """)
 
 # sample data
-date_value = '2021-02-14'
-file_dir_value = 'C:/Users/abc/school.jpg'
-tag_value = 'our school jay roy mila'
+# date_value = '2021-02-14'
+# file_dir_value = 'C:/Users/abc/school.jpg'
+# tag_value = 'our school jay roy mila'
 
-def insert_data(date_value, file_dir_value, tag_value) -> None:
+def insert_data(date_value:str, file_dir_value:str, tag_value:str) -> None:
     '''
     Inserts a new record into the 'data' table.
     
@@ -40,6 +40,7 @@ def insert_data(date_value, file_dir_value, tag_value) -> None:
         INSERT INTO data (date, file_dir, tag) 
         VALUES (?, ?, ?)
     """, (date_value, file_dir_value, tag_value))
+    connection.commit()
 
 def get_data_all() -> list:
     '''
@@ -108,12 +109,12 @@ def search_data_by_id(id_value):
     """, (id_value,))
     return cursor.fetchall()
 
-def search_data_wildcard(keyword:str) -> list:
+def query_db(query:str) -> list:
     '''
     filter-search
     '''
     # Execute the SQL query
-    cursor.execute("SELECT * FROM data WHERE tag LIKE '%{}%'".format(keyword))
+    cursor.execute("SELECT * FROM data WHERE tag LIKE '%{}%'".format(query))
     return cursor.fetchall()
 
 def close_db_connection() -> None:
@@ -128,6 +129,7 @@ def close_db_connection() -> None:
 # insert_data(date_value, file_dir_value, tag_value)
 # print('serachs',search_data('2021-01-21'))
 # delete_data_by_id(4)
-print(search_data_wildcard('roy'))
-close_db_connection()
+# print(query_db('mau5'))
+# close_db_connection()
 # [print(x) for x in get_data()]
+# print(get_data_all())

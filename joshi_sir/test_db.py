@@ -10,15 +10,19 @@ conn = sqlite3.connect('my_database.db')
 # Create a cursor object
 cur = conn.cursor()
 
-# Execute the SQL query
-cur.execute("SELECT * FROM data WHERE tag LIKE '%pic%'")
+def query_db(query:str) -> list:
+    #  Execute the SQL query
+    cur.execute("SELECT * FROM data WHERE tag LIKE '%{}%'".format(query))
+    return cur.fetchall()
 
 # Fetch all the rows
-rows = cur.fetchall()
+# print(_:=query_db('jay'))
+# rows = _
+# print((rows[-1][-2]))
 
-# Print the rows
-for row in rows:
-    print(row)
+# # Print the rows
+# for row in rows:
+#     print(row)
 
 # Close the connection
-conn.close()
+# conn.close()

@@ -19,34 +19,21 @@ ScrollView:
 '''
 
 from kivy.clock import Clock
-from kivymd.uix.textfield import MDTextField
-
-from kivy.uix.boxlayout import BoxLayout
-from kivymd.uix.list import OneLineListItem
-from kivymd.uix.button import MDIconButton
-from kivymd.uix.label import MDLabel
 
 class Example(MDApp):
         def build(self):
             return Builder.load_string(KV)
 
         def on_start(self):
-            result_text = ''
-            item = OneLineListItem()
-            box = BoxLayout(orientation='horizontal', spacing=10)
-            icon_btn1 = MDIconButton(icon="android", size_hint_x=None, width=50)
-            icon_btn2 = MDIconButton(icon="apple", size_hint_x=None, width=50)
-            label = MDTextField(
-                    text=result_text,
-                )
-            box.add_widget(icon_btn1)
-            box.add_widget(label)
-            box.add_widget(icon_btn2)
-            item.add_widget(box)
-            # root.add_widget(item)
+            item = OneLineAvatarIconListItem(text=f'Item first, 8')
+            icon_btn = MDIconButton(icon="android")
+            icon_btn.bind(on_release=self.delete_widget)
+            print('root is :', self.root.ids.container)
+            print(item.children[0])
+            item.children[0].add_widget(icon_btn)
             self.root.ids.container.add_widget(item)
             # time.sleep(2)
-            # threading.Thread(target=self.add_widget_with_time,args=(self.root.ids.container,)).start()
+            threading.Thread(target=self.add_widget_with_time,args=(self.root.ids.container,)).start()
 
         def add_widget_with_time(self, root):
             """
@@ -63,11 +50,7 @@ class Example(MDApp):
 
         def add_widget(self, root, i):
             global widget_list
-            item = OneLineAvatarIconListItem()
-            text_field = MDTextField(hint_text=f'Item {i}')
-            icon_btn = MDIconButton(icon="android")
-            item.children[0].add_widget(text_field)
-            item.children[0].add_widget(icon_btn)
+            item = OneLineAvatarIconListItem(text=f'Item {i}')
             icon_btn = MDIconButton(icon="android")
             item.children[0].add_widget(icon_btn)
             root.add_widget(item)
