@@ -7,8 +7,11 @@ The script also includes a function to retrieve all the data from the table.
 
 import sqlite3
 
+# Path to the database file | {CONFIG} set-up-API
+db_path = r'C:\Users\Snehasish\Documents\AAI\app_data\my_database.db'
+# db_path = 'my_database.db'
 # Create a connection to the database | {INITIALIZE}
-connection = sqlite3.connect('my_database.db')
+connection = sqlite3.connect(db_path)
 cursor = connection.cursor()
 
 # Create a table in the database | {PREPARE SCHEMA}
@@ -129,7 +132,7 @@ def close_db_connection() -> None:
 # insert_data(date_value, file_dir_value, tag_value)
 # print('serachs',search_data('2021-01-21'))
 # delete_data_by_id(4)
-# print(query_db('mau5'))
+# print(query_db('doc'))
 # close_db_connection()
 # [print(x) for x in get_data()]
 # print(get_data_all())

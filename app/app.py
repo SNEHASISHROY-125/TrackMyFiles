@@ -38,6 +38,9 @@ from kivy.clock import Clock
 # db_func
 import db as db
 
+# explorer
+import explorer as ex
+
 # exception handling
 import sys
 
@@ -289,9 +292,13 @@ class Example(MDApp):
 
     ''' open file explorer '''
     def open_dir(self,dir_path:str):
-        try:
-            subprocess.Popen('explorer {}'.format(dir_path), shell=True)
-        except Exception as e: toast('Error: {}'.format(e))
+        print('db used: ', db.db_path)
+        ex.open_file_manager(dir_path)
+        # try:
+        #     print('opening dir:', dir_path) # for debugging
+        #     subprocess.Popen('explorer "{}"'.format(dir_path), shell=True)
+        # except Exception as e:
+        #     toast('Error: {}'.format(e))
     ''' home '''
     def to_home(self):
         self.root.current = 'main'
