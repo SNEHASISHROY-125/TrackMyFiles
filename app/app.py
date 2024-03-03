@@ -35,6 +35,9 @@ from kivymd.uix.button import MDIconButton
 from kivymd.uix.label import MDLabel
 from kivy.clock import Clock
 
+# navigation drawer
+from kivymd.uix.navigationdrawer import MDNavigationDrawer
+
 # db_func
 import db as db
 
@@ -43,6 +46,7 @@ import explorer as ex
 
 # exception handling
 import sys
+import threading
 
 def get_date() -> str:
     '''
@@ -59,12 +63,26 @@ MDScreenManager:
         id: mainS
         name: "main"
 
+        MDNavigationDrawer:
+            id: nav_drawer
+
+            BoxLayout:
+                orientation: 'vertical'
+                spacing: '8dp'
+                padding: '8dp'
+
+                Image:
+                    source: './assets/Designer.png'
+
+                MDIconButton:
+                    icon: 'theme-light-dark'
+                    on_release: app.change_theme()
         BoxLayout:
             orientation: 'vertical'
 
             MDTopAppBar:
                 title: "ADD MEMOS"
-                left_action_items: [['menu', lambda x: app.theme_dark()]]
+                left_action_items: [['menu', lambda x: app.root.ids.nav_drawer.set_state("open") if app.root.ids.nav_drawer.state == "close" else app.root.ids.nav_drawer.set_state("close")]]
                 right_action_items: [['magnify', lambda x: app.show_search_dialog()]]
 
 
@@ -72,16 +90,28 @@ MDScreenManager:
                 MDTextField:
                     id: text_field
                     hint_text: "Name your memo"
-                    pos_hint: {'center_x': .5, 'center_y': .7}
+                    pos_hint: {'center_x': .5, 'center_y': .8}
                     size_hint_x: .8
                     text: 'memo'
+                    max_text_length: 15
+                    
+                MDTextField:
+                    id: text_field_folder
+                    hint_text: "C:/"
+                    pos_hint: {'center_x': .5, 'center_y': .7}
+                    size_hint_x: .8
+                    icon_right: "folder"
+                    text: 'C:/Users/sample/Downloads/sample.jpg'
+                    required: True
+                    helper_text: "Select a folder or file to add memo to."
+                    helper_text_mode: "on_error"
                     
                 MDIconButton:
                     icon: "folder-file"
                     theme_text_color: "Custom"
                     text_color: get_color_from_hex("#FF0000")
                     user_font_size: "70sp"
-                    pos_hint: {'center_x': .3, 'center_y': .6}
+                    pos_hint: {'center_x': .6, 'center_y': .6}
                     on_release: app.file_manager_open()
                 MDIconButton:
                     icon: "check"
@@ -112,6 +142,7 @@ MDScreenManager:
 class Example(MDApp):
 
     dialog = None # for search dialog
+    f_path = None # for file path
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -123,16 +154,16 @@ class Example(MDApp):
 
     def build(self):
         # exception handling in kivy | call my_exception_hook
-        sys.excepthook = self.my_exception_hook
+        # sys.excepthook = self.my_exception_hook
         return Builder.load_string(KV)
     
     ''' theme '''
-    def theme_dark(self):
-        # dark theme
-        self.theme_cls.theme_style = "Dark"
-    def theme_light(self):
-        # light theme
-        self.theme_cls.theme_style = "Light"
+    def change_theme(self):
+        if self.theme_cls.theme_style == "Light":
+            self.theme_cls.theme_style = "Dark"
+        else:
+            self.theme_cls.theme_style = "Light"
+
 
     ''' theme-end '''
 
@@ -153,6 +184,7 @@ class Example(MDApp):
         self.exit_manager()
         # add file_dir to db_payload
         db_payload['file_dir'] = path
+        self.root.get_screen('main').children[0].children[0].children[2].text = path
         toast(path)
 
     def exit_manager(self, *args):
@@ -165,7 +197,8 @@ class Example(MDApp):
     
     def check(self): # .children.__len__()
         # 
-        text_field_text = self.root.get_screen('main').children[0].children[0].children[2].text
+        text_field_text = self.root.get_screen('main').children[0].children[0].children[-1].text
+        print('text_field_text:\n',self.root.get_screen('main').children[0].children[0].children[-1].text,text_field_text)
         # db_payload['file_dir'] = self.path
         
         # add to db 
@@ -183,7 +216,7 @@ class Example(MDApp):
         # add to db:
         db.insert_data(db_payload['date'], db_payload['file_dir'], db_payload['memo'])
         # set to default text: ...
-        self.root.get_screen('main').children[0].children[0].children[2].text = 'name your memo'
+        self.root.get_screen('main').children[0].children[0].children[-1].text = 'name your memo'
         
         # toast sucess message
         toast('Memo added successfully')
@@ -279,9 +312,8 @@ class Example(MDApp):
             # self.root.get_screen("results").ids.container.add_widget(item)
         for i in content:  # 1 * i -> delay_sec
             print('DD: ',i)
-            # self.root.get_screen('results').children[0].children[0].children[0].add_widget(OneLineListItem(text=i[-1]))
             add_content(i)
-            # Clock.schedule_once(lambda dt: add_content(i), 1 * 0.3)
+            # threading.Thread(target=Clock.schedule_once(lambda dt: add_content(i), 1 * 0.1)).start()
 
     def delete_widget(self, r):
             global results_widget_list
