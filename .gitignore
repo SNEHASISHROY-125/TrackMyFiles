@@ -1,1 +1,5 @@
 /hide
+/build
+/dist
+/__pycache__
+/app_data

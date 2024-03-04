@@ -2,6 +2,7 @@
 
 '''
 
+import time
 from kivy.lang import Builder
 from kivymd.app import MDApp
 from kivymd.uix.filemanager import MDFileManager
@@ -11,7 +12,7 @@ import subprocess
 from kivymd.uix.dialog import MDDialog
 # import get_date as gd
 
-from datetime import date
+from datetime import datetime
 from kivymd.uix.textfield import MDTextField
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.button import MDFlatButton
@@ -35,20 +36,44 @@ from kivymd.uix.button import MDIconButton
 from kivymd.uix.label import MDLabel
 from kivy.clock import Clock
 
+# navigation drawer
+from kivymd.uix.navigationdrawer import MDNavigationDrawer
+
 # db_func
-import db as db
+import db as db # do not call directly | use db.init() to initialize the db & set the db_path before calling any db functions
 
 # explorer
 import explorer as ex
 
 # exception handling
 import sys
+import threading
+from pathlib import Path
+
+# sync_db
+import sync_db as sync
+
+# import config
+import config as cfg
+
+# https://stackoverflow.com/questions/31836104/pyinstaller-and-onefile-how-to-include-an-image-in-the-exe-file
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 
 def get_date() -> str:
     '''
     Returns the current date in the format: "YYYY-MM-DD".
     '''
-    return str(date.today())
+    return str(datetime.now())
+
 
 
 KV = '''
@@ -59,12 +84,26 @@ MDScreenManager:
         id: mainS
         name: "main"
 
+        MDNavigationDrawer:
+            id: nav_drawer
+
+            FloatLayout:
+                MDIconButton:
+                    icon: 'theme-light-dark'
+                    user_font_size: "70sp"
+                    pos_hint: {'center_x': .1, 'center_y': .8}
+                    on_release: app.change_theme()
+                MDIconButton:
+                    icon: 'cog'
+                    user_font_size: "70sp"
+                    pos_hint: {'center_x': .1, 'center_y': .6}
+                    on_release: app.to_settings()
         BoxLayout:
             orientation: 'vertical'
 
             MDTopAppBar:
                 title: "ADD MEMOS"
-                left_action_items: [['menu', lambda x: app.theme_dark()]]
+                left_action_items: [['menu', lambda x: app.root.ids.nav_drawer.set_state("open") if app.root.ids.nav_drawer.state == "close" else app.root.ids.nav_drawer.set_state("close")]]
                 right_action_items: [['magnify', lambda x: app.show_search_dialog()]]
 
 
@@ -72,22 +111,36 @@ MDScreenManager:
                 MDTextField:
                     id: text_field
                     hint_text: "Name your memo"
-                    pos_hint: {'center_x': .5, 'center_y': .7}
+                    pos_hint: {'center_x': .5, 'center_y': .8}
                     size_hint_x: .8
                     text: 'memo'
+                    max_text_length: 15
+                    
+                MDTextField:
+                    id: text_field_folder
+                    hint_text: "C:/"
+                    pos_hint: {'center_x': .5, 'center_y': .7}
+                    size_hint_x: .8
+                    icon_right: "folder"
+                    text: 'C:/Users/sample/Downloads/sample.jpg'
+                    required: True
+                    helper_text: "Select a folder or file to add memo to."
+                    helper_text_mode: "on_error"
+                    on_text_validate: app.check()
                     
                 MDIconButton:
-                    icon: "folder-file"
+                    icon: "folder"
                     theme_text_color: "Custom"
-                    text_color: get_color_from_hex("#FF0000")
+                    text_color: app.theme_cls.primary_color
                     user_font_size: "70sp"
-                    pos_hint: {'center_x': .3, 'center_y': .6}
+                    pos_hint: {'center_x': .7, 'center_y': .6}
                     on_release: app.file_manager_open()
+
                 MDIconButton:
                     icon: "check"
                     theme_text_color: "Custom"
-                    text_color: get_color_from_hex("#FF0000")
-                    pos_hint: {'center_x': .7, 'center_y': .6}
+                    text_color: app.theme_cls.primary_color
+                    pos_hint: {'center_x': .8, 'center_y': .6}
                     on_release: app.check()
 
     MDScreen:
@@ -106,12 +159,78 @@ MDScreenManager:
                 MDList:
                     id: container
         
+    MDScreen:
+        id: S3
+        name: "settings"
+        BoxLayout:
+            orientation: 'vertical'
+
+            MDTopAppBar:
+                title: "App Settings"
+                left_action_items: [['home', lambda x: app.to_home()]]
+                right_action_items: [['cloud-upload', lambda x: app.backup()]]
+            ScrollView:
+                do_scroll_x: False
+                MDBoxLayout:
+                    orientation: 'vertical'
+                    size_hint_y: None
+                    height: self.minimum_height
+                    padding: dp(10)
+                    spacing: dp(10)
+                    MDCard:
+                        size_hint: 0.8, None
+                        height: "90dp"
+                        pos_hint: {"center_x": .5}
+                        BoxLayout:
+                            padding: dp(10)
+                            MDLabel:
+                                text: 'Card 1'
+                            MDIconButton:
+                                icon: "language-python"
+                                user_font_size: "48sp"
+                    MDCard:
+                        size_hint: 0.8, None
+                        height: "90dp"
+                        pos_hint: {"center_x": .5}
+                        BoxLayout:
+                            padding: dp(10)
+                            MDTextField:
+                                hint_text: "Current Backup Path in use"
+                                text: app.config_tree_['database']['backup_dir']
+                            MDIconButton:
+                                id: backup_dir
+                                icon: "pencil"
+                                user_font_size: "48sp"
+                                on_release: app.select_backup_dir()
+                    MDCard:
+                        size_hint: 0.8, None
+                        height: "90dp"
+                        pos_hint: {"center_x": .5}
+                        BoxLayout:
+                            padding: dp(10)
+                        
+                            MDTextField:
+                                hint_text: "Current DB in use"
+                                text: app.config_tree_['database']['path']
+                            MDIconButton:
+                                id: backup_dir
+                                icon: "pencil"
+                                user_font_size: "48sp"
+                                on_release: app.restore()
+                                
 '''
 
 
-class Example(MDApp):
+class TrackMyFiles(MDApp):
 
     dialog = None # for search dialog
+    f_path = None # for file path
+    config_tree_ = cfg.config_tree_
+    '''for widgets in declarative'''
+    # init db
+    # setting db_path from config:
+    db.db_path = cfg.config_tree_['database']['path']
+    db.init()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -123,16 +242,23 @@ class Example(MDApp):
 
     def build(self):
         # exception handling in kivy | call my_exception_hook
-        sys.excepthook = self.my_exception_hook
+        # sys.excepthook = self.my_exception_hook
+        self.icon ='icon.ico' 
+        self.theme_cls.primary_palette = "DeepPurple"
+        self.theme_cls.theme_style = cfg.config_tree_['theme']['theme_style']
+        print('theme:',cfg.config_tree_['theme']['theme_style'])
+        # ['Red', 'Pink', 'Purple', 'DeepPurple', 'Indigo', 'Blue', 'LightBlue', 'Cyan', 'Teal', 'Green', 'LightGreen', 'Lime', 'Yellow', 'Amber', 'Orange', 'DeepOrange', 'Brown', 'Gray', 'BlueGray']
         return Builder.load_string(KV)
     
     ''' theme '''
-    def theme_dark(self):
-        # dark theme
-        self.theme_cls.theme_style = "Dark"
-    def theme_light(self):
-        # light theme
-        self.theme_cls.theme_style = "Light"
+    def change_theme(self):
+        if self.theme_cls.theme_style == "Light":
+            self.theme_cls.theme_style = "Dark"
+            cfg.config_tree_['theme']['theme_style'] = "Dark"
+        else:
+            self.theme_cls.theme_style = "Light"
+            cfg.config_tree_['theme']['theme_style'] = "Light"
+
 
     ''' theme-end '''
 
@@ -153,6 +279,7 @@ class Example(MDApp):
         self.exit_manager()
         # add file_dir to db_payload
         db_payload['file_dir'] = path
+        self.root.get_screen('main').children[0].children[0].children[2].text = path
         toast(path)
 
     def exit_manager(self, *args):
@@ -165,7 +292,8 @@ class Example(MDApp):
     
     def check(self): # .children.__len__()
         # 
-        text_field_text = self.root.get_screen('main').children[0].children[0].children[2].text
+        text_field_text = self.root.get_screen('main').children[0].children[0].children[-1].text
+        print('text_field_text:\n',self.root.get_screen('main').children[0].children[0].children[-1].text,text_field_text)
         # db_payload['file_dir'] = self.path
         
         # add to db 
@@ -183,7 +311,7 @@ class Example(MDApp):
         # add to db:
         db.insert_data(db_payload['date'], db_payload['file_dir'], db_payload['memo'])
         # set to default text: ...
-        self.root.get_screen('main').children[0].children[0].children[2].text = 'name your memo'
+        self.root.get_screen('main').children[0].children[0].children[-1].text = 'name your memo'
         
         # toast sucess message
         toast('Memo added successfully')
@@ -209,6 +337,9 @@ class Example(MDApp):
                 ],
             )
         self.dialog.open()
+        def set_on_focus(root): # set focus to the text field
+            root.focus = True 
+        threading.Thread(target=Clock.schedule_once(lambda dt: set_on_focus(self.dialog.content_cls), 1 * 0.3)).start()
 
     def close_dialog(self, obj):
         self.dialog.dismiss()
@@ -240,6 +371,8 @@ class Example(MDApp):
         # close the db connection
         db.close_db_connection()
         print('db connection closed')
+        # save changes to config file:
+        cfg.edit_config()
     
     ''' add result | S2 '''
     def add_result(self,content:list=['search result']):
@@ -257,7 +390,7 @@ class Example(MDApp):
             item = OneLineListItem()
             box = item.children[0]
             box.orientation = 'horizontal'
-            box.spacing = 70
+            # box.spacing = 70
             # box = BoxLayout(orientation='horizontal', spacing=10)
             icon_btn = MDIconButton(icon="close-circle", size_hint_x=None, width=50)
             open_btn = MDIconButton(icon="open-in-new", size_hint_x=None, width=50)
@@ -265,6 +398,7 @@ class Example(MDApp):
             open_btn.bind(on_release=lambda x: self.open_dir(result_url))
             label = MDTextField(
                     text=result_text,
+                    # size_hint_x=None,
                 )
             box.add_widget(icon_btn)
             box.add_widget(label)
@@ -279,9 +413,8 @@ class Example(MDApp):
             # self.root.get_screen("results").ids.container.add_widget(item)
         for i in content:  # 1 * i -> delay_sec
             print('DD: ',i)
-            # self.root.get_screen('results').children[0].children[0].children[0].add_widget(OneLineListItem(text=i[-1]))
             add_content(i)
-            # Clock.schedule_once(lambda dt: add_content(i), 1 * 0.3)
+            # threading.Thread(target=Clock.schedule_once(lambda dt: add_content(i), 1 * 0.1)).start()
 
     def delete_widget(self, r):
             global results_widget_list
@@ -299,17 +432,84 @@ class Example(MDApp):
         #     subprocess.Popen('explorer "{}"'.format(dir_path), shell=True)
         # except Exception as e:
         #     toast('Error: {}'.format(e))
+    ''' open file explorer end '''
+
     ''' home '''
     def to_home(self):
         self.root.current = 'main'
         # remove all widgets from results screen
         # self.delete_widget(None)
+
     ''' home end '''
 
     ''' results-screen '''
-    def to_history(self):
-        self.root.current = 'results'
+    def to_settings(self):
+        self.root.current = 'settings'
 
+    ''' results-screen end '''
+
+    ''' settings '''
+    def to_settings(self):
+        self.root.current = 'settings'
+
+    ''' settings end '''
+
+    ''' backup '''
+    def backup(self):
+        # do backup:
+        # 
+        if not cfg.config_tree_['database']['backup_dir']:
+            toast('Please select a backup directory')
+            _ = sync.export_db(db.db_path)
+            cfg.config_tree_['database']['backup_dir'] = _
+            self.root.get_screen('settings').children[0].children[0].children[0].children[1].children[0].children[1].text = _
+
+        else:
+            sync.export_db(db.db_path, dst_path=cfg.config_tree_['database']['backup_dir'])
+            toast('Backup successful {}'.format(get_date()))
+
+    def select_backup_dir(self):
+        # select backup dir
+        _ = sync.select_directory()
+        print('backup dir:', _)
+        # save changes to config file:
+        cfg.config_tree_['database']['backup_dir'] = _
+        # # change the text of the text field
+        self.root.get_screen('settings').children[0].children[0].children[0].children[1].children[0].children[1].text = _
+
+    def test(self):
+        print(self.root.get_screen('settings').children[0].children[0].children[0].children[0].children[0].children[1].text)
+        # print('test'
+
+    ''' backup end '''
+
+    ''' restore '''
+    def restore(self):
+        # do import a backup:
+        backup = sync.select_file(title_='Select a backup file to import')
+        # sync.import_db(backup)
+        print('backup:', backup)
+        toast('Backup imported successfully')
+        #
+        # first make a copy of the selected db file to the current db path/dir
+        sys_doc_dir = Path(os.path.expanduser("~/Documents"))
+        import_file_dst_dir  = os.path.join(sys_doc_dir, 'TrackMyFiles')
+            # copy file name:
+        new_name_ = str('import_'+str(datetime.now().strftime("%Y-%m-%d %H-%M-%S")) + ".db")
+        sync.copy_and_rename(src_path=backup, dst_dir=import_file_dst_dir, new_name=new_name_)
+        # then change the db_path to the {selected db file-copy}:
+        import_file_path = os.path.join(import_file_dst_dir, new_name_)
+        # update changes{b/ackup path} to the config_file
+        cfg.config_tree_['database']['path'] = import_file_path
+        # change the text of the text field
+        self.root.get_screen('settings').children[0].children[0].children[0].children[1].children[0].children[1].text = backup
+        # restart db:
+        db.close_db_connection()
+        db.db_path = import_file_path
+        db.init()
+        toast('Backup {} Restored successfully'.format(str(os.path.basename(backup))))
+        
+    ''' restore end '''
 
 # memry_dict
 # db_payload to insert into db
@@ -325,7 +525,7 @@ db_payload = {
 global results_widget_list
 results_widget_list = []
 
+# global 
 
 
-
-Example().run()
+TrackMyFiles().run()
