@@ -1,8 +1,22 @@
 '''
 
 '''
+from kivy.config import Config
 
-import time
+# Set the window size
+Config.set('graphics', 'width', '800')
+Config.set('graphics', 'height', '600')
+
+# Make the window non-resizable
+Config.set('graphics', 'resizable', '0')
+
+# Don't forget to import and run your app after setting the configuration
+# from kivy.app import App
+# ... rest of your app code ...
+
+#
+
+# import time
 from kivy.lang import Builder
 from kivymd.app import MDApp
 from kivymd.uix.filemanager import MDFileManager
@@ -77,6 +91,8 @@ def get_date() -> str:
 
 
 KV = '''
+<TooltipMDIconButton@MDIconButton+MDTooltip>
+
 MDScreenManager:
     id: smanager
 
@@ -98,6 +114,11 @@ MDScreenManager:
                     user_font_size: "70sp"
                     pos_hint: {'center_x': .1, 'center_y': .6}
                     on_release: app.to_settings()
+                MDIconButton:
+                    icon: 'file-pdf-box'
+                    user_font_size: "70sp"
+                    pos_hint: {'center_x': .1, 'center_y': .4}
+                    on_release: app.to_merger()
         BoxLayout:
             orientation: 'vertical'
 
@@ -133,7 +154,7 @@ MDScreenManager:
                     theme_text_color: "Custom"
                     text_color: app.theme_cls.primary_color
                     user_font_size: "70sp"
-                    pos_hint: {'center_x': .7, 'center_y': .6}
+                    pos_hint: {'center_x': .87, 'center_y': .72}
                     on_release: app.file_manager_open()
 
                 MDIconButton:
@@ -185,7 +206,9 @@ MDScreenManager:
                             padding: dp(10)
                             MDLabel:
                                 text: 'Card 1'
-                            MDIconButton:
+                            TooltipMDIconButton:
+                                tooltip_text: "Change the backup directory"
+                                tooltip_bg_color: app.theme_cls.primary_color
                                 icon: "language-python"
                                 user_font_size: "48sp"
                     MDCard:
@@ -197,7 +220,9 @@ MDScreenManager:
                             MDTextField:
                                 hint_text: "Current Backup Path in use"
                                 text: app.config_tree_['database']['backup_dir']
-                            MDIconButton:
+                            TooltipMDIconButton:
+                                tooltip_text: "Select a backup directory"
+                                tooltip_bg_color: app.theme_cls.primary_color
                                 id: backup_dir
                                 icon: "pencil"
                                 user_font_size: "48sp"
@@ -212,12 +237,41 @@ MDScreenManager:
                             MDTextField:
                                 hint_text: "Current DB in use"
                                 text: app.config_tree_['database']['path']
-                            MDIconButton:
+                            TooltipMDIconButton:
+                                tooltip_text: "Restore a backup"
+                                tooltip_bg_color: app.theme_cls.primary_color
                                 id: backup_dir
                                 icon: "pencil"
                                 user_font_size: "48sp"
                                 on_release: app.restore()
-                                
+
+    MDScreen:
+        id: S2
+        name: "merger"
+        BoxLayout:
+            orientation: 'vertical'
+
+            MDTopAppBar:
+                title: "Search Results"
+                left_action_items: [['home', lambda x: app.to_home()]]
+                
+                right_action_items: [['help-circle', lambda x: app.show_anim()]]
+
+            Image:
+                source: "pdf.png"
+                anim_delay: 0.03
+            MDSpinner:
+                palette:
+                    [0.28627450980392155, 0.8431372549019608, 0.596078431372549, 1],             [0.3568627450980392, 0.3215686274509804, 0.8666666666666667, 1],             [0.8862745098039215, 0.36470588235294116, 0.592156862745098, 1],             [0.8784313725490196, 0.9058823529411765, 0.40784313725490196, 1],
+                size_hint: None, None
+                size: dp(46), dp(46)
+                pos_hint: {'center_x': .5, 'center_y': .5}
+                active: False
+            MDRaisedButton:
+                text: "Merge PDFs"
+                pos_hint: {'center_x': .5, 'center_y': .5}
+                on_release: app.merge_pdfs()
+
 '''
 
 
@@ -227,6 +281,7 @@ class TrackMyFiles(MDApp):
     f_path = None # for file path
     config_tree_ = cfg.config_tree_
     '''for widgets in declarative'''
+    # active = False
     # init db
     # setting db_path from config:
     db.db_path = cfg.config_tree_['database']['path']
@@ -324,6 +379,7 @@ class TrackMyFiles(MDApp):
                 type="custom",
                 content_cls=MDTextField(
                     hint_text="Enter your search query",
+                    on_text_validate = self.do_search
                 ),
                 buttons=[
                     MDFlatButton(
@@ -357,6 +413,7 @@ class TrackMyFiles(MDApp):
         # self.add_result([self.dialog.content_cls.text])
         self.add_result(t_)
         self.dialog.dismiss()
+        #
         # change screen to results
         self.root.current = 'results'
 
@@ -448,11 +505,42 @@ class TrackMyFiles(MDApp):
 
     ''' results-screen end '''
 
-    ''' settings '''
-    def to_settings(self):
-        self.root.current = 'settings'
+    ''' pdf-merger '''
+    def to_merger(self):
+        self.root.current = 'merger'
+        # remove all widgets from results screen
+        # self.delete_widget(None)
 
-    ''' settings end '''
+    ''' pdf-merger end '''
+
+    ''' nerge-pdfs '''
+    def merge_pdfs(self):
+        # perform the merge operation
+        # pick the input directory and save directory
+        self.input_dir = mrg.select_directory("Select a folder that has all the pdf files")
+        self.save_dir = mrg.select_directory(title_="Select a folder to save the merged pdf file")
+        # start the spinner | self.active = True
+        self.root.get_screen('merger').children[0].children[1].active = True
+        # set the merged pdf name
+        self.merged_pdf_name = str(os.path.basename(self.input_dir) + ' MERGED.pdf')
+
+        def merge_in_background(root=None):
+
+            # mrg.main() -> True {wait for true to call the callback}
+            _ = mrg.merge_pdfs(input_dir=self.input_dir, dest_dir=self.save_dir, merged_pdf_name=self.merged_pdf_name)
+            print(_)
+            if _: root.active = False
+            # set vars to '':
+            self.input_dir = ''
+            self.save_dir = ''
+            self.merged_pdf_name = ''
+        
+        #
+        threading.Thread(target=merge_in_background, args=((self.root.get_screen('merger').children[0].children[1]),)).start()
+        # self.test('Merged PDF file saved to {}'.format(os.path.join(self.save_dir,self.merged_pdf_name).replace("/", "\\")))
+        # Clock.schedule_once(lambda dt: merge_in_background(self.root.get_screen('merger').children[0].children[1]))
+        # self.active = False
+        # toast('Merged PDF file saved successfully')
 
     ''' backup '''
     def backup(self):
@@ -477,8 +565,9 @@ class TrackMyFiles(MDApp):
         # # change the text of the text field
         self.root.get_screen('settings').children[0].children[0].children[0].children[1].children[0].children[1].text = _
 
-    def test(self):
-        print(self.root.get_screen('settings').children[0].children[0].children[0].children[0].children[0].children[1].text)
+    def test(self,content:str):
+        # print(self.root.get_screen('settings').children[0].children[0].children[0].children[0].children[0].children[1].text)
+        toast(content)
         # print('test'
 
     ''' backup end '''
@@ -510,6 +599,23 @@ class TrackMyFiles(MDApp):
         toast('Backup {} Restored successfully'.format(str(os.path.basename(backup))))
         
     ''' restore end '''
+    ''' animation'''
+    def show_anim(self):
+        import  test_
+        test_.show_modal(self, None)
+    def show_modal(self, instance):
+        modal = ModalView(size_hint=(.5, .5), auto_dismiss=True, background='', background_color=[0, 0, 0, 0])
+        modal.add_widget(Image(source='gif.gif', anim_delay=0.03))  # Load and play the GIF
+        modal.bind(on_open=self.modal_open, on_dismiss=self.modal_dismiss)
+        modal.open()
+
+    def modal_open(self, instance):
+        instance.opacity = 0
+        Animation(opacity=1, duration=0.5).start(instance)
+
+    def modal_dismiss(self, instance):
+        Animation(opacity=0, duration=0.5).start(instance)
+        # instance.dismiss()
 
 # memry_dict
 # db_payload to insert into db
@@ -527,5 +633,9 @@ results_widget_list = []
 
 # global 
 
+import merger as mrg
+from kivy.animation import Animation
+from kivy.uix.modalview import ModalView
+from kivy.uix.image import Image
 
 TrackMyFiles().run()

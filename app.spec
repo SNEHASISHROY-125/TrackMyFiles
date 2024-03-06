@@ -1,5 +1,5 @@
 # -*- mode: python ; coding: utf-8 -*-
-import kivy , kivymd , sqlite3, datetime
+import kivy , kivymd , sqlite3, datetime, pypdf2
 from kivy_deps import sdl2, glew
 from kivymd import hooks_path as kivymd_hooks_path
 

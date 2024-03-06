@@ -1,6 +1,10 @@
 /hide
 /build
 /dist
-/__pycache__
+/app/__pycache_
 /app_data
 /TrackMyPC_V1.3.0
+/.venv
+test_.py
+/merger
+gif.gif
