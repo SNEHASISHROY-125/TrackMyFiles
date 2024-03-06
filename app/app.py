@@ -53,6 +53,9 @@ from kivy.clock import Clock
 # navigation drawer
 from kivymd.uix.navigationdrawer import MDNavigationDrawer
 
+# navigation drawer
+from kivymd.uix.navigationdrawer import MDNavigationDrawer
+
 # db_func
 import db as db # do not call directly | use db.init() to initialize the db & set the db_path before calling any db functions
 
@@ -125,6 +128,7 @@ MDScreenManager:
             MDTopAppBar:
                 title: "ADD MEMOS"
                 left_action_items: [['menu', lambda x: app.root.ids.nav_drawer.set_state("open") if app.root.ids.nav_drawer.state == "close" else app.root.ids.nav_drawer.set_state("close")]]
+                left_action_items: [['menu', lambda x: app.root.ids.nav_drawer.set_state("open") if app.root.ids.nav_drawer.state == "close" else app.root.ids.nav_drawer.set_state("close")]]
                 right_action_items: [['magnify', lambda x: app.show_search_dialog()]]
 
 
@@ -132,6 +136,14 @@ MDScreenManager:
                 MDTextField:
                     id: text_field
                     hint_text: "Name your memo"
+                    pos_hint: {'center_x': .5, 'center_y': .8}
+                    size_hint_x: .8
+                    text: 'memo'
+                    max_text_length: 15
+                    
+                MDTextField:
+                    id: text_field_folder
+                    hint_text: "C:/"
                     pos_hint: {'center_x': .5, 'center_y': .8}
                     size_hint_x: .8
                     text: 'memo'
@@ -315,6 +327,7 @@ class TrackMyFiles(MDApp):
             cfg.config_tree_['theme']['theme_style'] = "Light"
 
 
+
     ''' theme-end '''
 
     ''' file manager '''
@@ -335,6 +348,7 @@ class TrackMyFiles(MDApp):
         # add file_dir to db_payload
         db_payload['file_dir'] = path
         self.root.get_screen('main').children[0].children[0].children[2].text = path
+        self.root.get_screen('main').children[0].children[0].children[2].text = path
         toast(path)
 
     def exit_manager(self, *args):
@@ -347,6 +361,8 @@ class TrackMyFiles(MDApp):
     
     def check(self): # .children.__len__()
         # 
+        text_field_text = self.root.get_screen('main').children[0].children[0].children[-1].text
+        print('text_field_text:\n',self.root.get_screen('main').children[0].children[0].children[-1].text,text_field_text)
         text_field_text = self.root.get_screen('main').children[0].children[0].children[-1].text
         print('text_field_text:\n',self.root.get_screen('main').children[0].children[0].children[-1].text,text_field_text)
         # db_payload['file_dir'] = self.path
@@ -366,6 +382,7 @@ class TrackMyFiles(MDApp):
         # add to db:
         db.insert_data(db_payload['date'], db_payload['file_dir'], db_payload['memo'])
         # set to default text: ...
+        self.root.get_screen('main').children[0].children[0].children[-1].text = 'name your memo'
         self.root.get_screen('main').children[0].children[0].children[-1].text = 'name your memo'
         
         # toast sucess message
@@ -471,6 +488,7 @@ class TrackMyFiles(MDApp):
         for i in content:  # 1 * i -> delay_sec
             print('DD: ',i)
             add_content(i)
+            # threading.Thread(target=Clock.schedule_once(lambda dt: add_content(i), 1 * 0.1)).start()
             # threading.Thread(target=Clock.schedule_once(lambda dt: add_content(i), 1 * 0.1)).start()
 
     def delete_widget(self, r):
