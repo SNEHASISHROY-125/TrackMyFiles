@@ -1,5 +1,5 @@
 # -*- mode: python ; coding: utf-8 -*-
-import kivy , kivymd , sqlite3, datetime, pypdf2
+import kivy , kivymd , sqlite3, datetime, PyPDF2
 from kivy_deps import sdl2, glew
 from kivymd import hooks_path as kivymd_hooks_path
 
@@ -8,7 +8,7 @@ a = Analysis(
     ['./app/app.py'],
     pathex=[],
     binaries=[],
-    datas=[('./icon.ico', '.')],
+    datas=[('./icon.ico', '.'), ('./pdf.png', '.'), ('./gif.gif', '.') , ('./assets/404-error.png', './assets')],
     hiddenimports=[kivymd_hooks_path],
     hookspath=[],
     hooksconfig={},

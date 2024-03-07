@@ -140,14 +140,7 @@ MDScreenManager:
                     size_hint_x: .8
                     text: 'memo'
                     max_text_length: 15
-                    
-                MDTextField:
-                    id: text_field_folder
-                    hint_text: "C:/"
-                    pos_hint: {'center_x': .5, 'center_y': .8}
-                    size_hint_x: .8
-                    text: 'memo'
-                    max_text_length: 15
+                    on_text_validate: app.file_manager_open()
                     
                 MDTextField:
                     id: text_field_folder
@@ -286,6 +279,8 @@ MDScreenManager:
 
 '''
 
+#
+from kivy.core.window import Window
 
 class TrackMyFiles(MDApp):
 
@@ -309,12 +304,17 @@ class TrackMyFiles(MDApp):
 
     def build(self):
         # exception handling in kivy | call my_exception_hook
-        # sys.excepthook = self.my_exception_hook
+        sys.excepthook = self.my_exception_hook
+        # set the icon
         self.icon ='icon.ico' 
         self.theme_cls.primary_palette = "DeepPurple"
         self.theme_cls.theme_style = cfg.config_tree_['theme']['theme_style']
         print('theme:',cfg.config_tree_['theme']['theme_style'])
         # ['Red', 'Pink', 'Purple', 'DeepPurple', 'Indigo', 'Blue', 'LightBlue', 'Cyan', 'Teal', 'Green', 'LightGreen', 'Lime', 'Yellow', 'Amber', 'Orange', 'DeepOrange', 'Brown', 'Gray', 'BlueGray']
+        # key events support:
+        Window.bind(on_key_down=self.on_key_down)
+        Window.bind(on_key_up=self.on_key_up)
+        
         return Builder.load_string(KV)
     
     ''' theme '''
@@ -326,9 +326,21 @@ class TrackMyFiles(MDApp):
             self.theme_cls.theme_style = "Light"
             cfg.config_tree_['theme']['theme_style'] = "Light"
 
-
-
     ''' theme-end '''
+
+    ''' key events support'''
+    def on_key_down(self, instance, keyboard, keycode, text, modifiers):
+        # print(f"Key pressed: {text, modifiers}")
+        if text == 's' and modifiers == ['ctrl']:
+            self.show_search_dialog()
+        elif text == 'a' and modifiers == ['ctrl']:
+            self.root.get_screen('main').children[0].children[0].children[-1].focus = True
+        elif text == 'h' and modifiers == ['ctrl']:
+            self.to_home()
+
+    def on_key_up(self, instance, keyboard, keycode): ...
+        # print(f"Key released: {keyboard, keycode}")
+    ''' key events support-end '''
 
     ''' file manager '''
     def file_manager_open(self):
@@ -348,7 +360,7 @@ class TrackMyFiles(MDApp):
         # add file_dir to db_payload
         db_payload['file_dir'] = path
         self.root.get_screen('main').children[0].children[0].children[2].text = path
-        self.root.get_screen('main').children[0].children[0].children[2].text = path
+        self.root.get_screen('main').children[0].children[0].children[2].focus = True # = path
         toast(path)
 
     def exit_manager(self, *args):
@@ -383,7 +395,7 @@ class TrackMyFiles(MDApp):
         db.insert_data(db_payload['date'], db_payload['file_dir'], db_payload['memo'])
         # set to default text: ...
         self.root.get_screen('main').children[0].children[0].children[-1].text = 'name your memo'
-        self.root.get_screen('main').children[0].children[0].children[-1].text = 'name your memo'
+        # self.root.get_screen('main').children[0].children[0].children[-1].text = 'name your memo'
         
         # toast sucess message
         toast('Memo added successfully')
@@ -414,32 +426,44 @@ class TrackMyFiles(MDApp):
             root.focus = True 
         threading.Thread(target=Clock.schedule_once(lambda dt: set_on_focus(self.dialog.content_cls), 1 * 0.3)).start()
 
-    def close_dialog(self, obj):
+    def close_dialog(self,*args):
         self.dialog.dismiss()
 
     def do_search(self, obj):
         # serach-dialog-box content-API
         search_query = self.dialog.content_cls.text
+        #
+        # Clock.schedule_once(lambda dt: self.show_modal('p'))
         print(f'Searching for: {search_query}')
         # search in db...
         t_ = db.query_db(search_query)
         # print(t_)
-        # clear the results screen first:
-        self.delete_widget(None)
-        # add result to results screen:
-        # self.add_result([self.dialog.content_cls.text])
-        self.add_result(t_)
-        self.dialog.dismiss()
+        # if already on results screen:
+        # global results_widget_list
+        if not self.root.current == 'results':
+            # already cleared {skip deleting} ..
+            # change screen to results
+            self.root.current = 'results'
+            # add result to results screen:
+            # self.add_result([self.dialog.content_cls.text])
+            Clock.schedule_once(lambda dt: self.add_result(t_) , 0.5)
+            self.close_dialog()
+        else:
+            # clear the results screen first:
+            self.delete_widget(None)
+            # add result to results screen:
+            # self.add_result([self.dialog.content_cls.text])
+            Clock.schedule_once(lambda dt: self.add_result(t_) )
+            self.close_dialog()
         #
-        # change screen to results
-        self.root.current = 'results'
+        # threading.Thread(target=self.show_anim).start()
 
     ''' search end '''
 
     def my_exception_hook(self, *args):
         # close the db connection
         db.close_db_connection()
-        print('db connection closed')
+        print('db connection closed\nException:',args)
     def on_start(self):...
     def on_stop(self):
         # close the db connection
@@ -460,21 +484,21 @@ class TrackMyFiles(MDApp):
         def add_content(content:tuple):
             result_text = content[-1] # content
             result_url = content[-2] # url {file-dir}
-            print('result_text:', result_text, 'result_url:', result_url)
+            # print('result_text:', result_text, 'result_url:', result_url)
             item = OneLineListItem()
             box = item.children[0]
             box.orientation = 'horizontal'
             # box.spacing = 70
             # box = BoxLayout(orientation='horizontal', spacing=10)
-            icon_btn = MDIconButton(icon="close-circle", size_hint_x=None, width=50)
+            close_btn = MDIconButton(icon="close-circle", size_hint_x=None, width=50)
             open_btn = MDIconButton(icon="open-in-new", size_hint_x=None, width=50)
-            open_btn.bind(on_release=lambda x: toast('explorer {}'.format(result_url)))
+            open_btn.bind(on_release=lambda x: toast('Opening {}'.format(result_url)))
             open_btn.bind(on_release=lambda x: self.open_dir(result_url))
             label = MDTextField(
                     text=result_text,
                     # size_hint_x=None,
                 )
-            box.add_widget(icon_btn)
+            box.add_widget(close_btn)
             box.add_widget(label)
             box.add_widget(open_btn)
             # item.add_widget(box)
@@ -485,9 +509,16 @@ class TrackMyFiles(MDApp):
             # print(item.children[0])
             self.root.get_screen('results').children[0].children[0].children[0].add_widget(item)
             # self.root.get_screen("results").ids.container.add_widget(item)
-        for i in content:  # 1 * i -> delay_sec
-            print('DD: ',i)
-            add_content(i)
+        if len(content) == 0:
+            toast('No results found')
+            self.root.get_screen('results').children[0].children[0].children[0].add_widget(
+                _:=Image(source='./assets/404-error.png', size_hint=(None, None), size=(200, 200), pos_hint={'center_x': .5, 'center_y': .5})
+            )
+            results_widget_list.append(_)
+        else:
+            [add_content(i) for i in content ]  # 1 * i -> delay_sec
+    
+            print(len(results_widget_list))
             # threading.Thread(target=Clock.schedule_once(lambda dt: add_content(i), 1 * 0.1)).start()
             # threading.Thread(target=Clock.schedule_once(lambda dt: add_content(i), 1 * 0.1)).start()
 
@@ -495,6 +526,8 @@ class TrackMyFiles(MDApp):
             global results_widget_list
             root = self.root.ids.container
             [root.remove_widget(w) for w in results_widget_list]
+            # clear the list
+            results_widget_list = []
     
     ''' add result end '''
 
@@ -513,7 +546,7 @@ class TrackMyFiles(MDApp):
     def to_home(self):
         self.root.current = 'main'
         # remove all widgets from results screen
-        # self.delete_widget(None)
+        self.delete_widget(None)
 
     ''' home end '''
 
