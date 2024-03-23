@@ -32,6 +32,13 @@ def check_config():
                     'primary_palette': 'Teal',
                     'accent_color': 'Red',
                     'theme_style': 'Light'
+                },
+                'app': {
+                    'version': '1.0.0',
+                    'first_run': True,
+                    'last_opened': '',
+                    'last_backup': '',
+                    'memo_text_limit': 15,
                 }
             }
             json.dump(config_tree_, f)

@@ -166,7 +166,7 @@ def query_db(query:str) -> list:
     # Execute the SQL query
     global cursor
     global connection
-    cursor.execute("SELECT * FROM data WHERE tag LIKE '%{}%'".format(query))
+    cursor.execute("SELECT * FROM data WHERE tag LIKE ?", ('%' + query + '%',))
     return cursor.fetchall()
 
 def close_db_connection() -> None:

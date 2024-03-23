@@ -8,7 +8,7 @@ a = Analysis(
     ['./app/app.py'],
     pathex=[],
     binaries=[],
-    datas=[('./icon.ico', '.'), ('./pdf.png', '.'), ('./gif.gif', '.') , ('./assets/404-error.png', './assets')],
+    datas=[('./assets/icon.ico', './assets'), ('./assets/pdf.png', './assets'), ('./assets/gif.gif', './assets') , ('./assets/404-error.png', './assets')],
     hiddenimports=[kivymd_hooks_path],
     hookspath=[],
     hooksconfig={},
@@ -24,7 +24,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     *[Tree(p) for p in (sdl2.dep_bins + glew.dep_bins)],
-    name='TrackMyPC_V1.6.0',
+    name='TrackMyPC_V1.7.0',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -37,5 +37,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='icon.ico'
+    icon='./assets/icon.ico'
 )

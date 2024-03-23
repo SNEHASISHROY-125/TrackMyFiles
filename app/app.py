@@ -139,7 +139,7 @@ MDScreenManager:
                     pos_hint: {'center_x': .5, 'center_y': .8}
                     size_hint_x: .8
                     text: 'memo'
-                    max_text_length: 15
+                    max_text_length: int(app.config_tree_['app']['memo_text_limit'])
                     on_text_validate: app.file_manager_open()
                     
                 MDTextField:
@@ -209,13 +209,20 @@ MDScreenManager:
                         pos_hint: {"center_x": .5}
                         BoxLayout:
                             padding: dp(10)
-                            MDLabel:
-                                text: 'Card 1'
+                            MDTextField:
+                                id: memo_limit
+                                hint_text: "memo text (max) limit"
+                                text: str(app.config_tree_['app']['memo_text_limit'])
                             TooltipMDIconButton:
-                                tooltip_text: "Change the backup directory"
+                                tooltip_text: "Change limit"
                                 tooltip_bg_color: app.theme_cls.primary_color
-                                icon: "language-python"
+                                icon: "pencil"
                                 user_font_size: "48sp"
+                                on_release: 
+                                    app.test('Memo text limit changed to {}'.format(memo_limit.text))
+                                    app.config_tree_['app']['memo_text_limit'] = int(memo_limit.text)
+                                    app.cfg_.edit_config()
+
                     MDCard:
                         size_hint: 0.8, None
                         height: "90dp"
@@ -240,6 +247,7 @@ MDScreenManager:
                             padding: dp(10)
                         
                             MDTextField:
+                                id: db_restore
                                 hint_text: "Current DB in use"
                                 text: app.config_tree_['database']['path']
                             TooltipMDIconButton:
@@ -263,7 +271,7 @@ MDScreenManager:
                 right_action_items: [['help-circle', lambda x: app.show_anim()]]
 
             Image:
-                source: "pdf.png"
+                source: "./assets/pdf.png"
                 anim_delay: 0.03
             MDSpinner:
                 palette:
@@ -284,6 +292,7 @@ from kivy.core.window import Window
 
 class TrackMyFiles(MDApp):
 
+    cfg_ = cfg # for kv-string only
     dialog = None # for search dialog
     f_path = None # for file path
     config_tree_ = cfg.config_tree_
@@ -304,9 +313,9 @@ class TrackMyFiles(MDApp):
 
     def build(self):
         # exception handling in kivy | call my_exception_hook
-        sys.excepthook = self.my_exception_hook
+        # sys.excepthook = self.my_exception_hook
         # set the icon
-        self.icon ='icon.ico' 
+        self.icon ='./assets/icon.ico' 
         self.theme_cls.primary_palette = "DeepPurple"
         self.theme_cls.theme_style = cfg.config_tree_['theme']['theme_style']
         print('theme:',cfg.config_tree_['theme']['theme_style'])
@@ -331,12 +340,14 @@ class TrackMyFiles(MDApp):
     ''' key events support'''
     def on_key_down(self, instance, keyboard, keycode, text, modifiers):
         # print(f"Key pressed: {text, modifiers}")
-        if text == 's' and modifiers == ['ctrl']:
+        if text == 'f' and modifiers == ['ctrl']:
             self.show_search_dialog()
         elif text == 'a' and modifiers == ['ctrl']:
             self.root.get_screen('main').children[0].children[0].children[-1].focus = True
         elif text == 'h' and modifiers == ['ctrl']:
             self.to_home()
+        elif text == 's' and modifiers == ['ctrl']:
+            self.to_settings()
 
     def on_key_up(self, instance, keyboard, keycode): ...
         # print(f"Key released: {keyboard, keycode}")
@@ -431,7 +442,7 @@ class TrackMyFiles(MDApp):
 
     def do_search(self, obj):
         # serach-dialog-box content-API
-        search_query = self.dialog.content_cls.text
+        search_query = str(self.dialog.content_cls.text)
         #
         # Clock.schedule_once(lambda dt: self.show_modal('p'))
         print(f'Searching for: {search_query}')
@@ -482,6 +493,7 @@ class TrackMyFiles(MDApp):
         # icon_btn.bind(on_release=self.delete_widget)
         # item.children[0].add_widget(icon_btn)
         def add_content(content:tuple):
+            print('content id :', content[0]) # id
             result_text = content[-1] # content
             result_url = content[-2] # url {file-dir}
             # print('result_text:', result_text, 'result_url:', result_url)
@@ -491,8 +503,9 @@ class TrackMyFiles(MDApp):
             # box.spacing = 70
             # box = BoxLayout(orientation='horizontal', spacing=10)
             close_btn = MDIconButton(icon="close-circle", size_hint_x=None, width=50)
+            close_btn.bind(on_release=lambda x: self.delete_from_db(id=content[0], widget_item=item))
             open_btn = MDIconButton(icon="open-in-new", size_hint_x=None, width=50)
-            open_btn.bind(on_release=lambda x: toast('Opening {}'.format(result_url)))
+            open_btn.bind(on_press=lambda x: toast('Opening {}'.format(result_url)))
             open_btn.bind(on_release=lambda x: self.open_dir(result_url))
             label = MDTextField(
                     text=result_text,
@@ -512,7 +525,7 @@ class TrackMyFiles(MDApp):
         if len(content) == 0:
             toast('No results found')
             self.root.get_screen('results').children[0].children[0].children[0].add_widget(
-                _:=Image(source='./assets/404-error.png', size_hint=(None, None), size=(200, 200), pos_hint={'center_x': .5, 'center_y': .5})
+                _:=Image(source='./assets/404-error.png', size_hint=(None, None), size=(800, 800), pos_hint={'center_x': .5, 'center_y': .5})
             )
             results_widget_list.append(_)
         else:
@@ -528,6 +541,14 @@ class TrackMyFiles(MDApp):
             [root.remove_widget(w) for w in results_widget_list]
             # clear the list
             results_widget_list = []
+    
+    def delete_from_db( self, id:int, widget_item):
+        # delete from db
+        db.delete_data_by_id(id)
+        # remove the widget from the results screen
+        self.root.get_screen('results').children[0].children[0].children[0].remove_widget(widget_item)
+        # toast:
+        toast('Deleted successfully')
     
     ''' add result end '''
 
@@ -642,7 +663,8 @@ class TrackMyFiles(MDApp):
         # update changes{b/ackup path} to the config_file
         cfg.config_tree_['database']['path'] = import_file_path
         # change the text of the text field
-        self.root.get_screen('settings').children[0].children[0].children[0].children[1].children[0].children[1].text = backup
+        print('ZZxxx ',self.root.ids)
+        self.root.ids.db_restore.text = backup
         # restart db:
         db.close_db_connection()
         db.db_path = import_file_path
@@ -656,7 +678,7 @@ class TrackMyFiles(MDApp):
         test_.show_modal(self, None)
     def show_modal(self, instance):
         modal = ModalView(size_hint=(.5, .5), auto_dismiss=True, background='', background_color=[0, 0, 0, 0])
-        modal.add_widget(Image(source='gif.gif', anim_delay=0.03))  # Load and play the GIF
+        modal.add_widget(Image(source='./assets/gif.gif', anim_delay=0.03))  # Load and play the GIF
         modal.bind(on_open=self.modal_open, on_dismiss=self.modal_dismiss)
         modal.open()
 
