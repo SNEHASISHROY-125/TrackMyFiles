@@ -14,19 +14,19 @@
 
 ## Screenshots
 
-![App Screenshot](https://github.com/SNEHASISHROY-125/TrackMyFiles/blob/develop/graphics/TrackMyFiles 05.png)
+![App Screenshot](https://github.com/SNEHASISHROY-125/TrackMyFiles/blob/develop/graphics/TrackMyFiles05.png)
 
-![App Screenshot](https://github.com/SNEHASISHROY-125/TrackMyFiles/blob/develop/graphics/TrackMyFiles 02.png)
+![App Screenshot](https://github.com/SNEHASISHROY-125/TrackMyFiles/blob/develop/graphics/TrackMyFiles02.png)
 
-![App Screenshot](https://github.com/SNEHASISHROY-125/TrackMyFiles/blob/develop/graphics/TrackMyFiles 07.png)
+![App Screenshot](https://github.com/SNEHASISHROY-125/TrackMyFiles/blob/develop/graphics/TrackMyFiles07.png)
 
-![App Screenshot](https://github.com/SNEHASISHROY-125/TrackMyFiles/blob/develop/graphics/TrackMyFiles 03.png)
+![App Screenshot](https://github.com/SNEHASISHROY-125/TrackMyFiles/blob/develop/graphics/TrackMyFiles03.png)
 
-![App Screenshot](https://github.com/SNEHASISHROY-125/TrackMyFiles/blob/develop/graphics/TrackMyFiles 04.png)
+![App Screenshot](https://github.com/SNEHASISHROY-125/TrackMyFiles/blob/develop/graphics/TrackMyFiles04.png)
 
-![App Screenshot](https://github.com/SNEHASISHROY-125/TrackMyFiles/blob/develop/graphics/TrackMyFiles 01.png)
+![App Screenshot](https://github.com/SNEHASISHROY-125/TrackMyFiles/blob/develop/graphics/TrackMyFiles01.png)
 
-![App Screenshot](https://github.com/SNEHASISHROY-125/TrackMyFiles/blob/develop/graphics/TrackMyFiles 06.png)
+![App Screenshot](https://github.com/SNEHASISHROY-125/TrackMyFiles/blob/develop/graphics/TrackMyFiles06.png)
 
 # Resources Used
 
