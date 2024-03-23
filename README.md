@@ -11,3 +11,17 @@
   * Keep your files in track with keywords.
   * Directly opens file from within the app.
   * Dark/Light mode+
+
+## Screenshots
+
+![App Screenshot](https://github.com/SNEHASISHROY-125/TrackMyFiles/graphics/TrackMyFiles 05.png)
+![App Screenshot](https://github.com/SNEHASISHROY-125/TrackMyFiles/graphics/TrackMyFiles 02.png)
+![App Screenshot](https://github.com/SNEHASISHROY-125/TrackMyFiles/graphics/TrackMyFiles 07.png)
+![App Screenshot](https://github.com/SNEHASISHROY-125/TrackMyFiles/graphics/TrackMyFiles 03.png)
+![App Screenshot](https://github.com/SNEHASISHROY-125/TrackMyFiles/graphics/TrackMyFiles 04.png)
+![App Screenshot](https://github.com/SNEHASISHROY-125/TrackMyFiles/graphics/TrackMyFiles 01.png)
+![App Screenshot](https://github.com/SNEHASISHROY-125/TrackMyFiles/graphics/TrackMyFiles 06.png)
+
+# Resources Used
+
+* Database icon provided by [Icons8](https://icons8.com/icon/o69S13OLJv8d/database)
