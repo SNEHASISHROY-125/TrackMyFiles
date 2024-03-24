@@ -1,6 +1,7 @@
 '''
 
 '''
+import random
 from kivy.config import Config
 
 # Set the window size
@@ -315,7 +316,7 @@ class TrackMyFiles(MDApp):
         # exception handling in kivy | call my_exception_hook
         # sys.excepthook = self.my_exception_hook
         # set the icon
-        self.icon ='./assets/icon.ico' 
+        self.icon ='./assets/icon-512.png' 
         self.theme_cls.primary_palette = "DeepPurple"
         self.theme_cls.theme_style = cfg.config_tree_['theme']['theme_style']
         print('theme:',cfg.config_tree_['theme']['theme_style'])
@@ -523,9 +524,11 @@ class TrackMyFiles(MDApp):
             self.root.get_screen('results').children[0].children[0].children[0].add_widget(item)
             # self.root.get_screen("results").ids.container.add_widget(item)
         if len(content) == 0:
+            # pick a random image{error} to show
+            source_ = random.choice(['./assets/404-error.png', './assets/no-results-found.png', './assets/3d-glassy-purple-cross-in-circle.png'])
             toast('No results found')
             self.root.get_screen('results').children[0].children[0].children[0].add_widget(
-                _:=Image(source='./assets/404-error.png', size_hint=(None, None), size=(800, 800), pos_hint={'center_x': .5, 'center_y': .5})
+                _:=Image(source=source_, size_hint=(None, None), size=(800, 800), pos_hint={'center_x': .5, 'center_y': .5})
             )
             results_widget_list.append(_)
         else:

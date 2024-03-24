@@ -1,0 +1,5 @@
+icon [icons8] https://downloads.intercomcdn.com/i/o/1000939977/2900de61872c530a047d0bc6/icons8-database-512.png
+404-error [iconscout.com] https://iconscout.com/free-3d-illustration/404-error-3543015
+pdf [iconscout.com] https://iconscout.com/free-3d-illustration/pdf-3543016
+cross-circular [icons8] https://icons8.com/illustrations/illustration/3d-glassy-purple-cross-in-circle
+no-results-found [iconscout.com] https://iconscout.com/free-3d-illustration/no-results-found-3543017
