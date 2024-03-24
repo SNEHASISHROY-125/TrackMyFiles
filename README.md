@@ -6,11 +6,15 @@
 [![GitHub license](https://img.shields.io/github/license/SNEHASISHROY-125/TrackMyFiles?color=orange)](https://github.com/cylonid/NativeAlphaForAndroid/blob/master/LICENSE)
 ![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)
 
+TrackMyFiles is a user-friendly desktop application designed to streamline file management. 
 
 ## Features
-  * Keep your files in track with keywords.
-  * Directly opens file from within the app.
-  * Dark/Light mode+
+
+- **Memo Notes**: Attach memo notes to any file on your system.
+- **Search**: Use keywords from the memo notes to locate your files.
+- **File Management**: Each file is displayed with an 'Open File' and a 'Delete Note' button for easy management.
+- **File Opening**: Clicking the 'Open File' button will open the associated file in its default application.
+
 
 ## Screenshots
 
@@ -27,6 +31,16 @@
 ![App Screenshot](https://github.com/SNEHASISHROY-125/TrackMyFiles/blob/develop/graphics/TrackMyFiles01.png)
 
 ![App Screenshot](https://github.com/SNEHASISHROY-125/TrackMyFiles/blob/develop/graphics/TrackMyFiles06.png)
+
+## Technologies Used
+
+- **KivyMD**: Used for creating a modern and user-friendly interface.
+- **SQLite3**: A lightweight database system used for storing and retrieving the memo notes.
+- **PyInstaller**: Used to compile the application into a standalone executable.
+
+## Installation
+
+The application is compiled into a standalone executable using PyInstaller, making it easy to install and use on any Windows system.
 
 # Resources Used
 
