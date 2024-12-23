@@ -1,0 +1,4 @@
+kivy
+kivymd
+datetime
+pyinstaller==6.4.0
