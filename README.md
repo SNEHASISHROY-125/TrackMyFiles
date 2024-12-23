@@ -17,19 +17,19 @@ TrackMyFiles is a user-friendly desktop application designed to streamline file 
 
 ## Screenshots
 
-![App Screenshot](https://github.com/SNEHASISHROY-125/TrackMyFiles/blob/develop/graphics/TrackMyFiles05.png)
+![App Screenshot](win/graphics/TrackMyFiles05.png)
 
-![App Screenshot](https://github.com/SNEHASISHROY-125/TrackMyFiles/blob/develop/graphics/TrackMyFiles02.png)
+![App Screenshot](win/graphics/TrackMyFiles02.png)
 
-![App Screenshot](https://github.com/SNEHASISHROY-125/TrackMyFiles/blob/develop/graphics/TrackMyFiles07.png)
+![App Screenshot](win/graphics/TrackMyFiles07.png)
 
-![App Screenshot](https://github.com/SNEHASISHROY-125/TrackMyFiles/blob/develop/graphics/TrackMyFiles03.png)
+![App Screenshot](win/graphics/TrackMyFiles03.png)
 
 ![App Screenshot](https://github.com/SNEHASISHROY-125/TrackMyFiles/blob/develop/graphics/TrackMyFiles04.png)
 
-![App Screenshot](https://github.com/SNEHASISHROY-125/TrackMyFiles/blob/develop/graphics/TrackMyFiles01.png)
+![App Screenshot](win/graphics/TrackMyFiles01.png)
 
-![App Screenshot](https://github.com/SNEHASISHROY-125/TrackMyFiles/blob/develop/graphics/TrackMyFiles06.png)
+![App Screenshot](win/graphics/TrackMyFiles06.png)
 
 ## Technologies Used
 
